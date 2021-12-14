@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:game24_fpga/widgets/player_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -10,43 +10,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
-  void initState() {
-    init();
-    super.initState();
-  }
-
-  Future<void> init() async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref("test/test1");
-    // Get the data once
-    DatabaseEvent event = await ref.once();
-    // Print the data of the snapshot
-    print(event.snapshot.value);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '0',
-              style: TextStyle(fontSize: 100),
-            ),
-            Text(
-              '0',
-              style: TextStyle(fontSize: 100),
-            ),
-            Text(
-              '0',
-              style: TextStyle(fontSize: 100),
-            ),
-            Text(
-              '0',
-              style: TextStyle(fontSize: 100),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(
+                '24 Game',
+                style: TextStyle(
+                  fontSize: 80,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              PlayerList(),
+            ],
+          ),
         ),
       ),
     );
