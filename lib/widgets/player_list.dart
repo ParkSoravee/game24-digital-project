@@ -40,6 +40,7 @@ class _PlayerListState extends State<PlayerList> {
           score: player.child('score').value as int,
           isActive: player.child('isActive').value as bool,
           isAnswer: player.child('isAnswer').value as bool,
+          key: player.key!,
         );
         _players.add(_playerObject);
         if (_playerObject.isActive == true) {
@@ -94,7 +95,11 @@ class _PlayerListState extends State<PlayerList> {
                           ),
                         ),
                         ListTile(
-                          onTap: () {},
+                          onTap: _players[i].isActive
+                              ? null
+                              : () {
+                                  _changeName(i);
+                                },
                           leading: Icon(
                             Icons.person,
                             color: _players[i].isActive
@@ -139,5 +144,48 @@ class _PlayerListState extends State<PlayerList> {
         ),
       ],
     );
+  }
+
+  Future<void> _changeName(int i) async {
+    final _form = GlobalKey<FormFieldState>();
+    final _controller = TextEditingController();
+    _controller.text = _players[i].name;
+    await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: Text('Change the name...'),
+              content: TextFormField(
+                controller: _controller,
+                key: _form,
+                onEditingComplete: () => _form.currentState!.save(),
+                onSaved: (val) async {
+                  await _playerRef
+                      .child(_players[i].key)
+                      .child('name')
+                      .set(val);
+                  Navigator.pop(context);
+                },
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  filled: true,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                TextButton(
+                    onPressed: () {
+                      _form.currentState!.save();
+                    },
+                    child: Text('Save')),
+              ],
+            ));
   }
 }
