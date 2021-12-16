@@ -16,7 +16,14 @@ class _PlayerListState extends State<PlayerList> {
   var _isAllReady = false;
   late DatabaseReference _playerRef;
   late StreamSubscription<DatabaseEvent> _playerSubscription;
+  late DatabaseReference _roundRef;
+  late DatabaseReference _durationRef;
+  late StreamSubscription<DatabaseEvent> _roundSubscription;
+  late StreamSubscription<DatabaseEvent> _durationSubscription;
+
   List<Player> _players = [];
+  late int _round;
+  late int _duration;
 
   @override
   void initState() {
@@ -25,40 +32,63 @@ class _PlayerListState extends State<PlayerList> {
   }
 
   Future<void> init() async {
-    setState(() {
-      _isLoading = true;
-    });
-    final database = FirebaseDatabase.instance;
-    _playerRef = database.ref("players");
-
-    _playerSubscription = _playerRef.onValue.listen((event) async {
-      _players = [];
-      int _numActive = 0;
-      event.snapshot.children.forEach((player) {
-        final _playerObject = Player(
-          name: player.child('name').value as String,
-          score: player.child('score').value as int,
-          isActive: player.child('isActive').value as bool,
-          isAnswer: player.child('isAnswer').value as bool,
-          key: player.key!,
-        );
-        _players.add(_playerObject);
-        if (_playerObject.isActive == true) {
-          _numActive += 1;
-        }
-      });
+    try {
       setState(() {
-        if (_numActive == _players.length)
-          _isAllReady = true;
-        else
-          _isAllReady = false;
-
-        _isLoading = false;
+        _isLoading = true;
       });
-    }, onError: (e) {
-      print(e);
-    });
+
+      final database = FirebaseDatabase.instance;
+      _playerRef = database.ref("players");
+      _roundRef = database.ref("game/round");
+      _durationRef = database.ref("game/duration");
+
+      // fetch players
+      _playerSubscription = _playerRef.onValue.listen((event) async {
+        _players = [];
+        int _numActive = 0;
+        event.snapshot.children.forEach((player) {
+          final _playerObject = Player(
+            name: player.child('name').value as String,
+            score: player.child('score').value as int,
+            isActive: player.child('isActive').value as bool,
+            isAnswer: player.child('isAnswer').value as bool,
+            key: player.key!,
+          );
+          _players.add(_playerObject);
+          if (_playerObject.isActive == true) {
+            _numActive += 1;
+          }
+        });
+
+        // Get listen round and duration
+        _roundSubscription = _roundRef.onValue.listen((event) async {
+          _round = event.snapshot.value as int;
+          setState(() {});
+        });
+        _durationSubscription = _durationRef.onValue.listen((event) async {
+          _duration = event.snapshot.value as int;
+          setState(() {});
+        });
+
+        setState(() {
+          if (_numActive == _players.length)
+            _isAllReady = true;
+          else
+            _isAllReady = false;
+
+          _isLoading = false;
+        });
+      }, onError: (e) {
+        print(e);
+      });
+    } catch (error) {
+      print(error);
+    }
   }
+
+  Future<void> setRound(int round) async {}
+
+  Future<void> setDuration(int duration) async {}
 
   @override
   Widget build(BuildContext context) {
@@ -79,53 +109,64 @@ class _PlayerListState extends State<PlayerList> {
                       color: Theme.of(context).primaryColor,
                     ),
                   )
-                : ListView.builder(
-                    itemCount: _players.length,
-                    itemBuilder: (ctx, i) => Stack(
-                      children: [
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                          width: double.infinity,
-                          height: 40,
-                          margin: EdgeInsets.symmetric(vertical: 6),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: _players[i].isActive ? Colors.amber : null,
-                          ),
+                : _players.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Join the game to start!',
+                          style: TextStyle(color: Colors.white38),
                         ),
-                        ListTile(
-                          onTap: _players[i].isActive
-                              ? null
-                              : () {
-                                  _changeName(i);
-                                },
-                          leading: Icon(
-                            Icons.person,
-                            color: _players[i].isActive
-                                ? Colors.black87
-                                : Colors.white,
-                          ),
-                          title: Text(
-                            _players[i].name,
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: _players[i].isActive
-                                  ? Colors.black87
-                                  : Colors.white,
+                      )
+                    : ListView.builder(
+                        itemCount: _players.length,
+                        itemBuilder: (ctx, i) => Stack(
+                          children: [
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeIn,
+                              width: double.infinity,
+                              height: 40,
+                              margin: EdgeInsets.symmetric(vertical: 6),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                color:
+                                    _players[i].isActive ? Colors.amber : null,
+                              ),
                             ),
-                          ),
+                            ListTile(
+                              onTap: _players[i].isActive
+                                  ? null
+                                  : () {
+                                      _changeName(i);
+                                    },
+                              leading: Icon(
+                                Icons.person,
+                                color: _players[i].isActive
+                                    ? Colors.black87
+                                    : Colors.white,
+                              ),
+                              title: Text(
+                                _players[i].name,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: _players[i].isActive
+                                      ? Colors.black87
+                                      : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
           ),
         ),
+        // Todo here
+        Text('round: $_round'),
+        Text('duration: $_duration'),
         SizedBox(
           height: 15,
         ),
         ElevatedButton(
-          onPressed: _isAllReady ? () {} : null,
+          onPressed: _isAllReady && _players.isNotEmpty ? () {} : null,
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(
               horizontal: 20,
@@ -136,7 +177,9 @@ class _PlayerListState extends State<PlayerList> {
             ),
           ),
           child: Text(
-            _isAllReady ? 'Start' : 'waiting all player ready...',
+            _isAllReady && _players.isNotEmpty
+                ? 'Start'
+                : 'waiting all player ready...',
             style: TextStyle(
               fontSize: 25,
             ),
