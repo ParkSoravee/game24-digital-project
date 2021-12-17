@@ -4,6 +4,7 @@ class Player {
   int score;
   bool isActive;
   bool isAnswer;
+  bool check;
 
   Player({
     required this.key,
@@ -11,5 +12,6 @@ class Player {
     required this.score,
     required this.isActive,
     required this.isAnswer,
+    required this.check,
   });
 }

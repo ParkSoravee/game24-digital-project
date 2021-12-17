@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,18 +13,18 @@ class PlayerList extends StatefulWidget {
 }
 
 class _PlayerListState extends State<PlayerList> {
-  var _isLoading = false;
+  var _isLoading = true;
   var _isAllReady = false;
+
   late DatabaseReference _playerRef;
   late StreamSubscription<DatabaseEvent> _playerSubscription;
   late DatabaseReference _roundRef;
-  late DatabaseReference _durationRef;
   late StreamSubscription<DatabaseEvent> _roundSubscription;
-  late StreamSubscription<DatabaseEvent> _durationSubscription;
+  late DatabaseReference _gameRef;
 
   List<Player> _players = [];
-  late int _round;
-  late int _duration;
+  int _score = 0;
+  // late int _duration;
 
   @override
   void initState() {
@@ -36,11 +37,10 @@ class _PlayerListState extends State<PlayerList> {
       setState(() {
         _isLoading = true;
       });
-
+      // set db ref
       final database = FirebaseDatabase.instance;
       _playerRef = database.ref("players");
-      _roundRef = database.ref("game/round");
-      _durationRef = database.ref("game/duration");
+      _gameRef = database.ref('game');
 
       // fetch players
       _playerSubscription = _playerRef.onValue.listen((event) async {
@@ -52,22 +52,13 @@ class _PlayerListState extends State<PlayerList> {
             score: player.child('score').value as int,
             isActive: player.child('isActive').value as bool,
             isAnswer: player.child('isAnswer').value as bool,
+            check: player.child('check').value as bool,
             key: player.key!,
           );
           _players.add(_playerObject);
           if (_playerObject.isActive == true) {
             _numActive += 1;
           }
-        });
-
-        // Get listen round and duration
-        _roundSubscription = _roundRef.onValue.listen((event) async {
-          _round = event.snapshot.value as int;
-          setState(() {});
-        });
-        _durationSubscription = _durationRef.onValue.listen((event) async {
-          _duration = event.snapshot.value as int;
-          setState(() {});
         });
 
         setState(() {
@@ -84,11 +75,49 @@ class _PlayerListState extends State<PlayerList> {
     } catch (error) {
       print(error);
     }
+
+    _gameRef.onValue.listen((event) {});
   }
 
-  Future<void> setRound(int round) async {}
+  int random(min, max) {
+    var rand = Random();
+    return min + rand.nextInt(max - min);
+  }
 
-  Future<void> setDuration(int duration) async {}
+  Future<void> startGame() async {
+    _score = _players.length;
+
+    // reset players score
+    _players.forEach((element) async {
+      // print(element.key);
+      await _playerRef.child(element.key).child('score').set(0);
+    });
+
+    // game system
+
+    // rand
+    final rand_op = random(0, 2);
+    String operator = rand_op == 0 ? '+' : '-';
+    int num = random(1, 64);
+    int ans = random(1, 64);
+
+    while (ans == num ||
+        (operator == '+' && ans < num) ||
+        (operator == '-' && ans > num)) {
+      num = random(1, 64);
+      ans = random(1, 64);
+      print('rand again $num $ans');
+    }
+    print('$num $operator ... = $ans');
+    DatabaseReference numRef = FirebaseDatabase.instance.ref('nums');
+    await numRef.child('ans').set(ans);
+    await numRef.child('num').set(num);
+
+    // set value in db
+    await _gameRef.child('isGamePlaying').set(true);
+    await _gameRef.child('showResult').set(false);
+    await _gameRef.child('isStart').set(true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,13 +189,12 @@ class _PlayerListState extends State<PlayerList> {
           ),
         ),
         // Todo here
-        Text('round: $_round'),
-        Text('duration: $_duration'),
+        // Text('duration: $_duration'),
         SizedBox(
           height: 15,
         ),
         ElevatedButton(
-          onPressed: _isAllReady && _players.isNotEmpty ? () {} : null,
+          onPressed: _isAllReady && _players.isNotEmpty ? startGame : null,
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(
               horizontal: 20,
