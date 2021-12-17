@@ -18,8 +18,8 @@ class _PlayerListState extends State<PlayerList> {
 
   late DatabaseReference _playerRef;
   late StreamSubscription<DatabaseEvent> _playerSubscription;
-  late DatabaseReference _roundRef;
-  late StreamSubscription<DatabaseEvent> _roundSubscription;
+  // late DatabaseReference _roundRef;
+  // late StreamSubscription<DatabaseEvent> _roundSubscription;
   late DatabaseReference _gameRef;
 
   List<Player> _players = [];
@@ -30,6 +30,12 @@ class _PlayerListState extends State<PlayerList> {
   void initState() {
     init();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _playerSubscription.cancel();
+    super.dispose();
   }
 
   Future<void> init() async {
@@ -52,7 +58,6 @@ class _PlayerListState extends State<PlayerList> {
             score: player.child('score').value as int,
             isActive: player.child('isActive').value as bool,
             isAnswer: player.child('isAnswer').value as bool,
-            check: player.child('check').value as bool,
             key: player.key!,
           );
           _players.add(_playerObject);
@@ -76,7 +81,7 @@ class _PlayerListState extends State<PlayerList> {
       print(error);
     }
 
-    _gameRef.onValue.listen((event) {});
+    // _gameRef.onValue.listen((event) {});
   }
 
   int random(min, max) {
@@ -114,9 +119,10 @@ class _PlayerListState extends State<PlayerList> {
     await numRef.child('num').set(num);
 
     // set value in db
-    await _gameRef.child('isGamePlaying').set(true);
+    // await _gameRef.child('isGamePlaying').set(true);
     await _gameRef.child('showResult').set(false);
     await _gameRef.child('isStart').set(true);
+    await _gameRef.child('winPlayer').set(0);
   }
 
   @override

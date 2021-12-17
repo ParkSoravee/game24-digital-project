@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:game24_fpga/screens/play_screen.dart';
 import 'firebase_options.dart';
 
 import 'screens/home_screen.dart';
@@ -19,8 +20,11 @@ class MyApp extends StatelessWidget {
       title: 'Game24 FPGA',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
+        backgroundColor: Color(0xFF29315D),
+        fontFamily: "BlackAndWhite",
       ),
-      home: HomeScreen(),
+      // home: HomeScreen(),
+      home: PlayScreen(),
     );
   }
 }
