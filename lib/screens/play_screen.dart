@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:game24_fpga/Models/player.dart';
+import 'package:game24_fpga/screens/home_screen.dart';
 import 'package:game24_fpga/widgets/show_score.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -16,14 +17,21 @@ class _PlayScreenState extends State<PlayScreen> {
   var _isLoading = true;
   var _num = 0;
   var _ans = 0;
+  var _isStart = false;
 
   late DatabaseReference _gameRef;
-  // late StreamSubscription<DatabaseEvent> _gameSubscription;
+  late StreamSubscription<DatabaseEvent> _gameSubscription;
 
   @override
   void initState() {
     init();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _gameSubscription.cancel();
+    super.dispose();
   }
 
   Future<void> init() async {
@@ -35,6 +43,13 @@ class _PlayScreenState extends State<PlayScreen> {
       DatabaseEvent event = await _gameRef.once();
       _num = event.snapshot.child('num').value as int;
       _ans = event.snapshot.child('ans').value as int;
+
+      // _gameSubscription = _gameRef.onValue.listen((event) {
+      //   setState(() {
+      //     _isStart = event.snapshot.child('isStart').value as bool;
+      //     print(_isStart);
+      //   });
+      // });
       setState(() {
         _isLoading = false;
       });
@@ -79,6 +94,53 @@ class _PlayScreenState extends State<PlayScreen> {
               ],
             ),
             gameNumShow(),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 30,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _gameRef.child('isStart').set(true);
+                        setState(() {
+                          init();
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Next round',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 15,
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (ctx) => HomeScreen(),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'End game',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
             ShowScore(),
           ],
         ),

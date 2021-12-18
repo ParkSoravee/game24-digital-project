@@ -13,9 +13,17 @@ void main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    var _isGamePlaying = false;
+    var _isStart = false;
+
     return MaterialApp(
       title: 'Game24 FPGA',
       theme: ThemeData(
@@ -23,8 +31,8 @@ class MyApp extends StatelessWidget {
         backgroundColor: Color(0xFF29315D),
         fontFamily: "BlackAndWhite",
       ),
-      // home: HomeScreen(),
-      home: PlayScreen(),
+      home: HomeScreen(),
+      // home: PlayScreen(),
     );
   }
 }

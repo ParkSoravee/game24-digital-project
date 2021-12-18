@@ -21,11 +21,11 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Text(
-                '24 Game',
+                'SPEED FPGA',
                 style: TextStyle(
                   fontSize: 80,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(

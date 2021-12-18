@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:game24_fpga/Models/player.dart';
+import 'package:game24_fpga/screens/play_screen.dart';
 
 class PlayerList extends StatefulWidget {
   const PlayerList({Key? key}) : super(key: key);
@@ -123,6 +124,8 @@ class _PlayerListState extends State<PlayerList> {
     await _gameRef.child('showResult').set(false);
     await _gameRef.child('isStart').set(true);
     await _gameRef.child('winPlayer').set(0);
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (ctx) => PlayScreen()));
   }
 
   @override
@@ -200,8 +203,9 @@ class _PlayerListState extends State<PlayerList> {
           height: 15,
         ),
         ElevatedButton(
-          onPressed: _isAllReady && _players.isNotEmpty ? startGame : null,
+          onPressed: startGame,
           style: ElevatedButton.styleFrom(
+            primary: Colors.amber,
             padding: EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 15,
@@ -211,9 +215,7 @@ class _PlayerListState extends State<PlayerList> {
             ),
           ),
           child: Text(
-            _isAllReady && _players.isNotEmpty
-                ? 'Start'
-                : 'waiting all player ready...',
+            'Start',
             style: TextStyle(
               fontSize: 25,
             ),
